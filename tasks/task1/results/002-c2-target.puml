@@ -1,0 +1,75 @@
+@startuml
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+System_Boundary(hotelio, "Hotelio") {
+
+    Container(mobile_client, "Мобильное приложение", "Kotlin")
+    Container(web_client, "Веб версия", "React")
+
+    Container(graphql, "GraphQL federation gateway")
+
+    Boundary(m_users_boundary, "Микросервис управления пользователями") {
+        Container(m_users, "Обработчики запросов", "Java")
+        ContainerDb(m_users_db, "База пользователей", "PostgreSQL")
+        Rel(m_users, m_users_db, "Обмен данными")
+    }
+
+    Boundary(m_booking_boundary, "Микросервис управления бронированиями") {
+        Container(m_booking, "Обработчики запросов", "Java")
+        ContainerDb(m_booking_db, "База бронирований", "PostgreSQL")
+        Rel(m_booking, m_booking_db, "Обмен данными")
+    }
+
+    Boundary(m_hotels_boundary, "Микросервис управления отелями") {
+        Container(m_hotels, "Обработчики запросов", "Java")
+        ContainerDb(m_hotels_db, "База отелей", "PostgreSQL")
+        Rel(m_hotels, m_hotels_db, "Обмен данными")
+    }
+
+   Boundary(m_promo_boundary, "Микросервис управления промо") {
+       Container(m_promo, "Обработчики запросов", "Java")
+       ContainerDb(m_promo_db, "База промо", "PostgreSQL")
+       Rel(m_promo, m_promo_db, "Обмен данными")
+   }
+
+   Container(kafka, "Брокер сообщений", "Kafka")
+
+   Rel(mobile_client, graphql, "Отправляет запросы", "HTTPS")
+   Rel(web_client, graphql, "Отправляет запросы", "HTTPS")
+   Rel(graphql, m_users, "Отправляет запросы", "gRPC")
+   Rel(graphql, m_booking, "Отправляет запросы", "gRPC")
+   Rel(graphql, m_hotels, "Отправляет запросы", "gRPC")
+   Rel(graphql, m_promo, "Отправляет запросы", "gRPC")
+
+   Rel(m_users, kafka, "Взаимодействует")
+   Rel(m_booking, kafka, "Взаимодействует")
+   Rel(m_hotels, kafka, "Взаимодействует")
+   Rel(m_promo, kafka, "Взаимодействует")
+}
+
+System_Ext(payment_gateway, "Платёжный шлюз", "Выполнение оплаты, возвратов, привзяки банковских карт")
+System_Ext(mobile_carrier_gateway, "Шлюз отправки SMS", "Отправка информационных и 2FA сообщений пользователям")
+System_Ext(hotel_apis, "API отелей", "Синхнронизация информации о бронированиях и размещениях")
+
+Person(user, "Пользователь", "Взаимодействует с интерфейсов Hotelio через веб версию или мобильное приложение")
+Person(hotels_administrator, "Администратор отеля", "Взаимодействует с административной панелью Hotelio для управления отелями и бронированием")
+Person(hotelio_administrator, "Администратор плаформы", "Взаимодействует с административной панелью Hotelio")
+
+Rel(user, mobile_client, "Использует")
+Rel(user, web_client, "Использует")
+
+Rel(hotels_administrator, mobile_client, "Использует")
+Rel(hotels_administrator, web_client, "Использует")
+
+Rel(hotelio_administrator, mobile_client, "Использует")
+Rel(hotelio_administrator, web_client, "Использует")
+
+Rel(m_hotels, hotel_apis, "Взаимодействует")
+Rel(m_booking, payment_gateway, "Взаимодействует")
+Rel(m_booking, mobile_carrier_gateway, "Взаимодействует")
+Rel(m_users, mobile_carrier_gateway, "Взаимодействует")
+
+SHOW_LEGEND(false)
+@enduml

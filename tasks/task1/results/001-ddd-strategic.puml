@@ -1,0 +1,33 @@
+@startuml
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+title Диаграмма доменов Hotelio
+
+System_Boundary(hotelio, "Hotelio") {
+
+    Boundary(hotels, "Управление отелями", "Domain") {
+        Container(review, "Управление отзывами", "Subdomain")
+        Container(owners_system, "Система администрирования для владельцев", "Subdomain")
+        Container(listing, "Система подбора и рекомендаций", "Subdomain")
+        Container(integration, "Интеграция с отелями", "Subdomain")
+    }
+
+    Boundary(users, "Управление пользователями", "Domain") {
+        Container(auth, "Система аутентификации и авторизации", "Subdomain")
+        Container(inventory, "Система учёта", "Subdomain")
+        Container(fraud, "Антифрод система", "Subdomain")
+    }
+
+    Boundary(booking, "Управление бронированиями", "Domain") {
+        Container(billing, "Система биллинга", "Subdomain")
+        Container(rooms, "Управление ценами и вместимостью", "Subdomain")
+        Container(notifications, "Система уведомлений", "Subdomain")
+    }
+
+    Boundary(promo, "Управление промо акциями", "Domain") {
+
+    }
+}
+
+@enduml
