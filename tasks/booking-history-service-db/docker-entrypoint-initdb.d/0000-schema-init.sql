@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS users_stat (
+    user_id VARCHAR(255) PRIMARY KEY,
+    count INT NOT NULL DEFAULT 0 CHECK (count >= 0),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS hotels_stat (
+    hotel_id VARCHAR(255) PRIMARY KEY,
+    count INT NOT NULL DEFAULT 0 CHECK (count >= 0),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS days_stat (
+     date DATE PRIMARY KEY,
+     count INT NOT NULL DEFAULT 0 CHECK (count >= 0),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

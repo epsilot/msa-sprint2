@@ -15,7 +15,7 @@ services:
       SPRING_DATASOURCE_USERNAME: hotelio
       SPRING_DATASOURCE_PASSWORD: hotelio
       BOOKING_SERVICE_EXTERNAL_HOST: booking-service
-      BOOKING_SERVICE_EXTERNAL_PORT: 9090
+      BOOKING_SERVICE_EXTERNAL_PORT: 50051
 
   monolith-db:
     image: postgres:15
@@ -52,8 +52,87 @@ services:
     networks:
       - hotelio-net
 
+  booking-service:
+    build:
+      context: ../booking-service
+      dockerfile: Dockerfile
+    container_name: booking-service
+    ports:
+      - "50051:50051"
+    networks:
+      - hotelio-net
+    environment:
+      DB_URL: postgresql://hotelio:hotelio@booking-service-db:5432/hotelio
+      MONOLITH_API_URL: http://monolith:8080/api
+      KAFKA_URL: kafka:9092
+      KAFKA_BOOKING_TOPIC: bookings
+    depends_on:
+      booking-service-db:
+        condition: service_healthy
+        restart: true
+
+  booking-service-db:
+    image: postgres:15
+    container_name: booking-service-db
+    environment:
+      POSTGRES_USER: hotelio
+      POSTGRES_PASSWORD: hotelio
+      POSTGRES_DB: hotelio
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U hotelio -d hotelio" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    ports:
+      - "5433:5432"
+    volumes:
+      - booking-service-data:/var/lib/postgresql/data
+      - ../booking-service-db/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    networks:
+      - hotelio-net
+
+  booking-history-service:
+    build:
+      context: ../booking-history-service
+      dockerfile: Dockerfile
+    container_name: booking-history-service
+    networks:
+      - hotelio-net
+    environment:
+      DB_URL: postgresql://hotelio:hotelio@booking-history-service-db:5432/hotelio
+      KAFKA_URL: kafka:9092
+      KAFKA_BOOKING_TOPIC: bookings
+    depends_on:
+      booking-history-service-db:
+        condition: service_healthy
+        restart: true
+
+  booking-history-service-db:
+    image: postgres:15
+    container_name: booking-history-service-db
+    environment:
+      POSTGRES_USER: hotelio
+      POSTGRES_PASSWORD: hotelio
+      POSTGRES_DB: hotelio
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U hotelio -d hotelio" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    ports:
+      - "5434:5432"
+    volumes:
+      - booking-history-service-data:/var/lib/postgresql/data
+      - ../booking-history-service-db/docker-entrypoint-initdb.d/:/docker-entrypoint-initdb.d/
+    networks:
+      - hotelio-net
+
 volumes:
   monolith-db-data:
+  booking-service-data:
+  booking-history-service-data:
 
 networks:
   hotelio-net:
