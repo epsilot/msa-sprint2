@@ -16,15 +16,61 @@ const typeDefs = gql`
   }
 `;
 
+const HOTEL_MOCK = [
+  {
+    id: "test-hotel-1",
+    name: "Hotel 1",
+    city: "City 1",
+    starts: 1
+  },
+  {
+    id: "test-hotel-2",
+    name: "Hotel 2",
+    city: "City 1",
+    starts: 2
+  },
+  {
+    id: "test-hotel-3",
+    name: "Hotel 3",
+    city: "City 2",
+    starts: 3
+  },
+  {
+    id: "test-hotel-2",
+    name: "Hotel 4",
+    city: "City 3",
+    starts: 4
+  },
+];
+
+
+const aclCheck = (headers) => {
+  if (!headers.hasOwnProperty('userid')) {
+    throw new GraphQLError('You do not have permission to view these bookings.', {
+      extensions: {
+        code: 'FORBIDDEN',
+      },
+    });
+  }
+}
+
+
+
 const resolvers = {
   Hotel: {
-    __resolveReference: async ({ id }) => {
-      // TODO: Реальный вызов к hotel-сервису или заглушка
+    __resolveReference: async ({ id }, { req }) => {
+      console.log('Hotel resolve request for id: ' + id)
+      aclCheck(req.headers)
+
+      return HOTEL_MOCK.find((i) => i.id === id)
     },
   },
   Query: {
-    hotelsByIds: async (_, { ids }) => {
-      // TODO: Заглушка или REST-запрос
+    hotelsByIds: async (_, { ids }, { req }) => {
+      console.log('hotelsByIds request for ids: ' + JSON.stringify(ids))
+      aclCheck(req.headers)
+
+      return HOTEL_MOCK.filter((i) => ids.includes(i.id))
     },
   },
 };
@@ -35,6 +81,7 @@ const server = new ApolloServer({
 
 startStandaloneServer(server, {
   listen: { port: 4002 },
+  context: async ({ req }) => ({ req }),
 }).then(() => {
   console.log('✅ Hotel subgraph ready at http://localhost:4002/');
 });
