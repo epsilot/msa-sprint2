@@ -21,3 +21,12 @@ spec:
 
           ports:
             - containerPort: {{ .Values.service.targetPort }}
+          livenessProbe:
+{{ toYaml .Values.livenessProbe | indent 12 }}
+          readinessProbe:
+{{ toYaml .Values.readinessProbe | indent 12 }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          env:
+            - name: ENABLE_FEATURE_X
+              value: {{ .Values.env.enableFeatureX | quote }}
